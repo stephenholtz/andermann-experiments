@@ -154,19 +154,14 @@ if nargin < 7 || isempty(contrastPreMultiplicator)
     contrastPreMultiplicator = 1.0;
 end
 
-% Macbook Support... SLH
-try
-    if ~nonSymmetric
-        % Load standard symmetric support shader - Faster!
-        gaborShader = LoadGLSLProgramFromFiles('MJLMGaborAndSquareShader', debuglevel);
-    else
-        % Load extended asymmetric support shader - Slower!
-        gaborShader = LoadGLSLProgramFromFiles('NonSymetricGaborShader', debuglevel);
-    end
-catch
+% Adding support for a computer without this compiled compiled
+if ~nonSymmetric && strcmpi(computer,'WIN64')
+    % Load standard symmetric support shader - Faster!
+    gaborShader = LoadGLSLProgramFromFiles('MJLMGaborAndSquareShader', debuglevel);
+else
+    % Load extended asymmetric support shader - Slower!
     gaborShader = LoadGLSLProgramFromFiles('NonSymetricGaborShader', debuglevel);
 end
-
 % Setup shader:
 glUseProgram(gaborShader);
 

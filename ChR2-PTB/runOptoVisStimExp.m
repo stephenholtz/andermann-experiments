@@ -29,6 +29,7 @@ clear forceClear
 %--------------------------------------------------------------------------
 animalName      = 'FAKEMOUSE00';
 expName         = 'USELESSEXP-START';
+fprintf('>>>>\n>>>> Starting Experiment\n>>>>animalName: %s\n>>>>expName: %s\n',animalName,expName)
 
 %--------------------------------------------------------------------------
 %% Set filepaths and variables
@@ -39,14 +40,11 @@ switch computer
         addpath(genpath('/Users/stephenholtz/grad-repos/Psychtoolbox-3-master/'));
         tmpMetaFolderName   = '/Users/stephenholtz/Zocalo/stim_metadata';
         useDaqDev = 0;
-        Screen('CloseAll');
-        Screen('Preference', 'SkipSyncTests', 1);
     case {'PCWIN64'}
         addpath(genpath('C:\toolbox\Psychtoolbox'))
         tmpMetaFolderName   = 'D:\stim_metadata';
         useDaqDev = 1;
         daqreset;
-        Screen('CloseAll');
     otherwise
         error('Unrecognized computer')
 end
@@ -64,6 +62,7 @@ end
 %% DAQ Setup
 %--------------------------------------------------------------------------
 if useDaqDev
+    fprintf('>>>>\n>>>> Initializing DAQ\n>>>>\n')
     niOut = daq.createSession('ni');
     % Determine devID with daq.GetDevices or NI's MAX software
     devID = 'Dev1';
@@ -81,6 +80,8 @@ end
 %--------------------------------------------------------------------------
 %% Configure psychtoolbox and stimulation
 %--------------------------------------------------------------------------
+Screen('CloseAll');
+
 % monitor struct has all information about the display monitor
 % Setup/use andermann lab rig definitions
 monitor.distance_cm    = 20;
@@ -108,6 +109,7 @@ clear interval res
 %--------------------------------------------------------------------------
 %% Set visual/LED stimulus parameters
 %--------------------------------------------------------------------------
+fprintf('>>>>\n>>>> Making frame struct for stimuli\n>>>>\n')
 % stim is stimulus information, iterate over stim.stimLoc to make stimuli
 % Padding time before and after the repeated stimuli
 stim.durPad = 5;
@@ -204,6 +206,8 @@ clear nFrames* nStims iStim nStims visStart visEnd ledStart ledEnd iLocation iCu
 %--------------------------------------------------------------------------
 %% Save metadata before experiment
 %--------------------------------------------------------------------------
+fprintf('>>>>\n>>>> Saving experiment metadata:\n>>>> %s\n',fullfile(metaSaveDir,metaSaveFile))
+
 % Move experiment info to the exp struct
 exp.animalName = animalName;
 exp.expName = expName;
@@ -218,6 +222,7 @@ clear expDate fullDateTime expName animalName screenOut
 %--------------------------------------------------------------------------
 %% Final setup + Present stimuli
 %--------------------------------------------------------------------------
+fprintf('>>>>\n>>>> Starting stimulus presentation\n>>>>\n')
 % Channel 0 is the PTB, Channel 1 is the LED Start with both at zero
 if useDaqDev
     niOut.outputSingleScan([0;0]);
@@ -264,6 +269,11 @@ Screen('Flip', winID);
 % a buffer period anyways, so it doesn't matter that it is far 
 % slower.
 for iFrame = 1:length(frame.contrast)
+    if ~mod(iFrame,monitor.framerate*2)
+        disp('')
+        disp(frame)
+        disp('')
+    end
     % Always update the LED first, err on side of too much
     if useDaqDev
         niOut.outputSingleScan([0,frame.led(iFrame)]);
@@ -339,8 +349,8 @@ end
 Screen('Flip', winID);
 
 % Flip to empty screen as final state of stimulus presentation:
-finalColor = repmat(WhiteIndex(winID) * sqrt(stim.endLuminance) * stim.luminanceCalibration, 3);
-Screen('FillRect', winID, finalColor);
+finalColor = WhiteIndex(winID) * sqrt(stim.endLuminance) * monitor.luminanceCalib;
+Screen('FillRect', winID, [finalColor finalColor finalColor]);
 Screen('Flip', winID);
 
 % Wait at the end until keyboard press is detected:
