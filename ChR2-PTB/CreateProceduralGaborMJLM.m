@@ -154,11 +154,16 @@ if nargin < 7 || isempty(contrastPreMultiplicator)
     contrastPreMultiplicator = 1.0;
 end
 
-if ~nonSymmetric
-    % Load standard symmetric support shader - Faster!
-    gaborShader = LoadGLSLProgramFromFiles('MJLMGaborAndSquareShader', debuglevel);
-else
-    % Load extended asymmetric support shader - Slower!
+% Macbook Support... SLH
+try
+    if ~nonSymmetric
+        % Load standard symmetric support shader - Faster!
+        gaborShader = LoadGLSLProgramFromFiles('MJLMGaborAndSquareShader', debuglevel);
+    else
+        % Load extended asymmetric support shader - Slower!
+        gaborShader = LoadGLSLProgramFromFiles('NonSymetricGaborShader', debuglevel);
+    end
+catch
     gaborShader = LoadGLSLProgramFromFiles('NonSymetricGaborShader', debuglevel);
 end
 

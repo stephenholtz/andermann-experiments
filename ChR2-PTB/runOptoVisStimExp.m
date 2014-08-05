@@ -17,7 +17,6 @@
 %--------------------------------------------------------------------------
 %% Clean up workspace and daq 
 %--------------------------------------------------------------------------
-daqreset;
 forceClear = 1;
 if forceClear
     close all force; 
@@ -40,10 +39,14 @@ switch computer
         addpath(genpath('/Users/stephenholtz/grad-repos/Psychtoolbox-3-master/'));
         tmpMetaFolderName   = '/Users/stephenholtz/Zocalo/stim_metadata';
         useDaqDev = 0;
+        Screen('CloseAll');
+        Screen('Preference', 'SkipSyncTests', 1);
     case {'PCWIN64'}
-        addpath('C:\toolbox\Psychtoolbox')
+        addpath(genpath('C:\toolbox\Psychtoolbox'))
         tmpMetaFolderName   = 'D:\stim_metadata';
         useDaqDev = 1;
+        daqreset;
+        Screen('CloseAll');
     otherwise
         error('Unrecognized computer')
 end
@@ -78,7 +81,7 @@ end
 %--------------------------------------------------------------------------
 %% Configure psychtoolbox and stimulation
 %--------------------------------------------------------------------------
-% m struct has all information about the display monitor
+% monitor struct has all information about the display monitor
 % Setup/use andermann lab rig definitions
 monitor.distance_cm    = 20;
 monitor.model          = 'Dell epi rig';
@@ -124,13 +127,12 @@ stim.contrast = -0.8;  %don't change
 stim.endLuminance = 0.5;  % 0 (black) to 1 (white):
 % Field of view, degrees of visual angle (-1==full screen)
 stim.fieldOfViewDeg = 22.5;
-stim.fieldOfViewRadiusPx = stim.fieldOfViewPx * 0.5 * monitor.px_per_deg;
-stim.aspectRation
-% Stim Locations, (-,-) = upper left
-% +15 +15 is off screen (my "blank" stimulus")
+stim.fieldOfViewRadiusPx = stim.fieldOfViewDeg * 0.5 * monitor.px_per_deg;
+stim.aspectRatio = 1;
+% Stim Locations, (-,-) = upper left, +15 +15 is off screen (my "blank" stimulus")
 stim.stimLoc = [-11, 0; 0 0; +15 +15];
-% Stimulus location order 0,1,2 (0 blank, 1:2 positions)
-stim.stimLocOrder = repmat([1*ones(1,3) 2*ones(1,3) 0*ones(1,3)],1,2);
+% Stimulus location order 1,2,3 (3 blank, 1:2 positions)
+stim.stimLocOrder = repmat([1*ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
 % Repeats and randomization
 stim.nRepeats = 40;
 % LED on(1) and off(0)
@@ -171,7 +173,7 @@ for iStim = 1:nStims
     % Location of the stimulus (most important setting!)
     iLocation = stim.stimLocOrder(iCurrStim);
     frame.stimType(visStart:visEnd) = iLocation;
-    frame.location(visStart:visEnd) = repmat(stim.stimLoc(:,iLocation),length(visStart:visEnd,1));
+    frame.location(visStart:visEnd,:) = repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
     frame.contrast(visStart:visEnd) = stim.contrast;
     frame.orientation(visStart:visEnd) = stim.orientation;
     frame.sFreq(visStart:visEnd) = stim.sFreq;
@@ -184,22 +186,21 @@ for iStim = 1:nStims
     %   temporal frequency, the grating has to be advanced by 
     %   (360/framerate) * TF degrees
     for iFrame = visStart:visEnd
-        frame.phase(fr) = mod((iFrame+1-iStart)*(360/monitor.framerate)*stim.tFreq, 360);
+        frame.phase(iFrame) = mod((iFrame+1-visStart)*(360/monitor.framerate)*stim.tFreq, 360);
     end
 
     % LED on and off (make sure it is the same length as visual stimuli fields)
     frame.led(visStart:visEnd) = 0;
     ledStart = visStart + nFramesLedPre;
-    ledEnd = visStop + nFramesLedPost;
-    iLedState = stim.ledOnOffOrder(iCurrStim);
-    frame.led(ledStart:ledEnd) = stim.stimLoc(iLedState);
+    ledEnd = visEnd + nFramesLedPost;
+    frame.led(ledStart:ledEnd) = stim.ledOnOffOrder(iCurrStim);
 end
 % Add some blank periods at the end
 visStart  = length(frame.contrast) + 1;
 visEnd    = visStart+nFramesPad;
 frame.contrast(visStart:visEnd) = 0;
 
-clear nFrames* nStims iStim nStims visStart visEnd ledStart ledEnd iLocation
+clear nFrames* nStims iStim nStims visStart visEnd ledStart ledEnd iLocation iCurrStim
 %--------------------------------------------------------------------------
 %% Save metadata before experiment
 %--------------------------------------------------------------------------
@@ -217,9 +218,10 @@ clear expDate fullDateTime expName animalName screenOut
 %--------------------------------------------------------------------------
 %% Final setup + Present stimuli
 %--------------------------------------------------------------------------
-% Channel 0 is the PTB, Channel 1 is the LED
-% Start with both at zero
-niOut.outputSingleScan([0;0]);
+% Channel 0 is the PTB, Channel 1 is the LED Start with both at zero
+if useDaqDev
+    niOut.outputSingleScan([0;0]);
+end
 
 % Start screen with Gray background
 medGrayColor = 255 * sqrt(0.5) * monitor.luminanceCalib;
@@ -230,13 +232,12 @@ import java.awt.Robot;
 mouse = Robot;
 screenSize = get(0, 'screensize');
 mouse.mouseMove(screenSize(3), screenSize(4));
-HideCursor(stimonitor.monitor.id);
+HideCursor(monitor.id);
 
-% Build a procedural gabor texture for a gabor with a support of w x h pixels.
-[gaborID, gaborRect] = CreateProceduralGaborMJLM(winID,...
-                                                monitor.width_px,...
-                                                monitor.height_px,...
-                                                monitor.luminanceCalibration);
+[gaborID,~] = CreateProceduralGaborMJLM(winID,...
+                            monitor.width_px,...
+                            monitor.height_px,...
+                            monitor.luminanceCalib);
 
 % Draw the gabor once at zero contrast to make sure hardware gets
 % initialized before the actual stimulus presentation begins
@@ -262,20 +263,19 @@ Screen('Flip', winID);
 % Previously had the first frame as a dummy frame, but here it is 
 % a buffer period anyways, so it doesn't matter that it is far 
 % slower.
-for iFrame = 1:nFrames
+for iFrame = 1:length(frame.contrast)
     % Always update the LED first, err on side of too much
-    niOut.outputSingleScan([0,frame.led(iFrame)]);
-
+    if useDaqDev
+        niOut.outputSingleScan([0,frame.led(iFrame)]);
+    end
     % Start GPU timer immediately before drawing the stimulus:
     % (Timer will automatically stop at next flip.)
     Screen('GetWindowInfo', winID, 5);
-
-    destination_rect=CenterRect([0 0 support_w_px support_h_px],...
-                                [0 + location(iFrame,1)...
-                                 0 + location(iFrame,2)...
+    destinationRect=CenterRect([0 0 monitor.width_px monitor.height_px],...
+                                [0 + frame.location(iFrame,1)...
+                                 0 + frame.location(iFrame,2)...
                                  monitor.width_px + frame.location(iFrame,1)...
                                  monitor.height_px + frame.location(iFrame,2)]);
-
     % Draw the Gabor patch using the "procedural texture" syntax:
     % Note: kPsychDontDoRotation = rotation will be performed by the gabor drawing 
     % function rather than by the Screen function
@@ -283,8 +283,8 @@ for iFrame = 1:nFrames
             winID,...
             gaborID,...
             [],...                  %sourceRect
-            destination_rect,...    %destinationRect
-            orientation(iFrame),...
+            destinationRect,...    %destinationRect
+            frame.orientation(iFrame),...
             [],...                  %filterMode
             [],...                  %globalAlpha
             [],...                  %modulateColor
@@ -300,11 +300,13 @@ for iFrame = 1:nFrames
      screenOut.beampos(iFrame)] = Screen('Flip', winID);
 
     % Send analogue out at the end of a frame that is the stimulus position
-    % pos 0 = 1V, pos 1 = 2V; pos 2 = 3V; may not be used but useful redundancy
+    % pos 1 = 1V, pos 2 = 2V; pos 3 = 3V; may not be used but useful redundancy
     % no value sent during the off periods (when contrast is 0)
-    encodedStimVoltage = (abs(frame.contrast(iFrame)) > 0) * (frame.stimType(iFrame)+1);
-    niOut.outputSingleScan([encodedStimVoltage,frame.led(iFrame)]);
-    niOut.outputSingleScan([0,frame.led(iFrame)]);
+    if useDaqDev
+        encodedStimVoltage = (abs(frame.contrast(iFrame)) > 0) * (frame.stimType(iFrame));
+        niOut.outputSingleScan([encodedStimVoltage,frame.led(iFrame)]);
+        niOut.outputSingleScan([0,frame.led(iFrame)]);
+    end
 
     % After drawing and flipping, poll GPU to return processing time:
     while true
@@ -328,7 +330,9 @@ end
 save(fullfile(metaSaveDir,metaSaveFile),'exp','monitor','stim','frame','screenOut','-v7.3')
 
 % Should already be no signal out, just to be sure:
-niOut.outputSingleScan([0,0]);
+if useDaqDev
+    niOut.outputSingleScan([0,0]);
+end
 
 % A final synced flip, so we can be sure all drawing is finished when we
 % reach this point:
