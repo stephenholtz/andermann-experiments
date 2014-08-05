@@ -1,0 +1,6 @@
+Condition	Frequency		Block		Timing File				TaskObject#1			TaskObject#2				TaskObject#3				TaskObject#4
+1			6				1 2 3 4		pavlovian_CSp_2s		Mov(CSp_primetime,0,0)	
+2			3				2 3		conditional_CSp_2s		pic(blank,0,0) 			Mov(CSp_primetime,0,0)
+3			2				1 2 3		blank_2s			pic(blank,0,0)
+4			3				3		conditional_CSm_2s		pic(blank,0,0) 			Mov(CSm_primetime,0,0)
+5			3				3		conditional_CSn_2s		pic(blank,0,0) 			Mov(CSn_primetime,0,0)	TTL(1)
