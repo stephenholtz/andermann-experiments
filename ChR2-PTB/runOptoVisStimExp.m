@@ -68,7 +68,7 @@ end
 fullDateTime        = datestr(now,30);
 expDate             = fullDateTime(1:8);
 metaSaveDir = fullfile(tmpMetaFolderName,animalName,[expDate '_' expName]);
-metaSaveFile = [fullDateTime '_' expName '_' animalName '.mat'];
+metaSaveFile = ['stimulus_metadata_' fullDateTime '_' expName '_' animalName '.mat'];
 if ~exist(metaSaveDir,'dir')
     mkdir(metaSaveDir);
 end
@@ -131,7 +131,7 @@ clear interval res
 %--------------------------------------------------------------------------
 % stim is stimulus information, iterate over stim.stimLoc to make stimuli
 % Padding time before and after the repeated stimuli
-stim.durPad = 5;
+stim.durPad = 10;
 % Stimulus on/off time in seconds converted into a ceil of 60 Hz
 stim.durOff = 3;
 stim.durOn = 1;
@@ -150,12 +150,13 @@ stim.endLuminance = 0.5;  % 0 (black) to 1 (white):
 stim.fieldOfViewDeg = 20;
 stim.fieldOfViewRadiusPx = stim.fieldOfViewDeg * 0.5 * monitor.px_per_deg;
 stim.aspectRatio = 1;
-% Stim Locations, (-,-) = upper left, second 0 0 is my "blank" stimulus"
-stim.stimLoc = [-11, 0; 0 0; 0 0];
+% Stim Locations, (-,-) = upper left, 11 0 is my "blank" stimulus", just
+% set to 11 for plotting ease
+stim.stimLoc = [-11, 0; 0 0; 11 0];
 % Stimulus location order 1,2,3 (3 blank, 1:2 positions)
 stim.stimLocOrder = repmat([1*ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
 % Repeats and randomization
-stim.nRepeats = 1;
+stim.nRepeats = 2;
 % LED on(1) and off(0)
 stim.ledOnOffOrder = [0*ones(1,9), 1*ones(1,9)];
 stim.ledPreVisDurSecs = .5;
@@ -179,7 +180,7 @@ nFramesLedPost  = ceil(stim.ledPostVisDurSecs * monitor.framerate);
 % Blank initial duration (maybe for baselining)
 frame.contrast      = 0*ones(1,nFramesPad);
 frame.led           = 0*ones(1,nFramesPad);
-frame.stimType      = -1*ones(1,nFramesPad);
+frame.stimType      = 0*ones(1,nFramesPad);
 iLocation           = 3; % The third, 'blank' location
 frame.location      = repmat(stim.stimLoc(iLocation,:),nFramesPad,1);
 frame.orientation   = stim.orientation*ones(1,nFramesPad);
@@ -198,7 +199,8 @@ for iStim = 1:nStims
     visStart  = length(frame.led) + 1;
     visEnd    = visStart+nFramesOff;
     frame.contrast(visStart:visEnd) = 0;
-    frame.led(visStart:visEnd) = 0;
+    frame.led(visStart:visEnd)      = 0;
+    frame.stimType(visStart:visEnd) = 0;
 
     % On parameters
     visStart  = length(frame.led) + 1;
@@ -237,7 +239,7 @@ visEnd    = visStart+nFramesPad;
 iLocation = 3; % The third, 'blank' location
 frame.contrast(visStart:visEnd)     = 0;
 frame.led(visStart:visEnd)          = 0;
-frame.stimType(visStart:visEnd)     = -1;
+frame.stimType(visStart:visEnd)     = 0;
 frame.location(visStart:visEnd,:)   = repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
 frame.orientation(visStart:visEnd)  = stim.orientation;
 frame.sFreq(visStart:visEnd)        = stim.sFreq;
@@ -255,14 +257,14 @@ clear nFrames* nStims iStim nStims visStart visEnd ledStart ledEnd iLocation iCu
 fprintf('****\n**** Saving experiment metadata:\n**** %s\n',fullfile(metaSaveDir,metaSaveFile))
 
 % Move experiment info to the exp struct
-exp.animalName = animalName;
-exp.expName = expName;
-exp.fullDateTime = fullDateTime;
-exp.expDate = expDate; 
-exp.metaSaveFile = metaSaveFile;
+meta.animalName = animalName;
+meta.expName = expName;
+meta.fullDateTime = fullDateTime;
+meta.expDate = expDate; 
+meta.metaSaveFile = metaSaveFile;
 % Save an empty variable for the PTB timing / debugging struct
 screenOut = [];
-save(fullfile(metaSaveDir,metaSaveFile),'exp','monitor','stim','frame','screenOut','-v7.3')
+save(fullfile(metaSaveDir,metaSaveFile),'meta','monitor','stim','frame','screenOut','-v7.3')
 
 clear expDate fullDateTime expName animalName screenOut
 %--------------------------------------------------------------------------
@@ -353,8 +355,7 @@ for iFrame = 1:length(frame.contrast)
     % pos 1 = 1V, pos 2 = 2V; pos 3 = 3V; may not be used but useful redundancy
     % no value sent during the off periods (when contrast is 0)
     if useDaqDev
-        encodedStimVoltage = (abs(frame.contrast(iFrame)) > 0) * (frame.stimType(iFrame));
-        niOut.outputSingleScan([encodedStimVoltage,frame.led(iFrame)]);
+        niOut.outputSingleScan([frame.stimType(iFrame),frame.led(iFrame)]);
         niOut.outputSingleScan([0,frame.led(iFrame)]);
     end
 
