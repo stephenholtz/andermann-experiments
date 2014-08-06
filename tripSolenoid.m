@@ -1,4 +1,4 @@
-%% Trip the solenoid valve
+%% Trip solenoids hooked up to a 5V transistor switch  
 
 daqreset; clc;
 close all force;
@@ -35,7 +35,6 @@ while valveFilling
 end
 
 %% Cycle the output for debugging
-
 doTest = 0;
 if doTest
     

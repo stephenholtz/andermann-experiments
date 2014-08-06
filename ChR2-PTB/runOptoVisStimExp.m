@@ -30,9 +30,9 @@ clear forceClear
 %--------------------------------------------------------------------------
 %% Edit for each animal/experiment change
 %--------------------------------------------------------------------------
-animalName      = 'FAKEMOUSE00';
-expName         = 'USELESSEXP-START';
-fprintf('>>>>\n>>>> Starting Experiment\n>>>> animalName: %s\n>>>> expName: %s\n',animalName,expName)
+animalName      = 'NEWMOUSE01';
+expName         = 'DEBUG01';
+fprintf('****\n**** Starting Experiment\n**** animalName: %s\n**** expName: %s\n',animalName,expName)
 
 %--------------------------------------------------------------------------
 %% Set filepaths and variables
@@ -42,19 +42,23 @@ switch computer
     case {'MACI64'}
         addpath(genpath('/Users/stephenholtz/grad-repos/Psychtoolbox-3-master/'));
         tmpMetaFolderName = '/Users/stephenholtz/Zocalo/stim_metadata';
+
+        % Do not use DAQ when on MAC
         useDaqDev = 0;
         % Pressing a key during presentation will stop experiment        
         allowKbStop = 1;
     case {'PCWIN64'}
-        % Error encountered if path is not correctly ordered
+        % Error encountered if path is not correctly ordered, not ideal but working
         restoredefaultpath
         addpath(genpath('C:\toolbox\Psychtoolbox'))
         addpath('C:\toolbox\Psychtoolbox\PsychBasic\MatlabWindowsFilesR2007a')
         addpath('C:\matlab-repos\andermann-experiments\ChR2-PTB\')
-        tmpMetaFolderName ='D:\stim_metadata';
+        tmpMetaFolderName = 'D:\stim_metadata';
+
+        % Use the DAQ when on a PC
         useDaqDev = 1;
         daqreset;
-        % Pressing a key during presentation will stop experiment
+        % Pressing a key during presentation will not(!) stop experiment
         allowKbStop = 0;
     otherwise
         error('Unrecognized computer')
@@ -73,16 +77,18 @@ end
 %% DAQ Setup
 %--------------------------------------------------------------------------
 if useDaqDev
-    fprintf('>>>>\n>>>> Initializing DAQ\n>>>>\n')
+    fprintf('****\n**** Initializing DAQ\n****\n')
     niOut = daq.createSession('ni');
     % Determine devID with daq.GetDevices or NI's MAX software
     devID = 'Dev1';
     % Add Analog Channels / names for documentation
+    % Same as used in previous retinotopy experiments
     aO = niOut.addAnalogOutputChannel(devID,[0],'Voltage');
     aO(1).Name = 'Psych Toolbox Stimulus Encoding';
     % Add Digital Channels / names for documentation
+    % Same as used in monkeylogic
     dIO = niOut.addDigitalChannel(devID,{'Port0/Line2'},'OutputOnly');
-    dIO(1).Name = 'LED ON/OFF'; 
+    dIO(1).Name = 'LED MOD'; 
     clear devID
 else
     disp('No Daq devices initialized (testing on macbook)')
@@ -92,7 +98,7 @@ end
 %% Configure psychtoolbox and stimulation
 %--------------------------------------------------------------------------
 
-% Determine if computer is configured correctly
+% Determine if computer is configured correctly (v. helpful for path debug)
 AssertOpenGL;
 Screen('CloseAll');
 
@@ -123,7 +129,6 @@ clear interval res
 %--------------------------------------------------------------------------
 %% Set visual/LED stimulus parameters
 %--------------------------------------------------------------------------
-fprintf('>>>>\n>>>> Making frame struct for stimuli\n>>>>\n')
 % stim is stimulus information, iterate over stim.stimLoc to make stimuli
 % Padding time before and after the repeated stimuli
 stim.durPad = 5;
@@ -133,7 +138,7 @@ stim.durOn = 1;
 % Orientation (0 degrees = 'right' / 90 = 'up') andermann lab conventions
 stim.orientation = 45+360;
 % Spatial frequencies (cpd)
-stim.sFreq = 0.005;
+stim.sFreq = 0.08;
 % Temporal frequencie (Hz)
 stim.tFreq = 2;
 % Contrast, from 0 to 1 (Positive values for sinusoidal, negative for step gratings.)
@@ -156,6 +161,10 @@ stim.ledOnOffOrder = [0*ones(1,9), 1*ones(1,9)];
 stim.ledPreVisDurSecs = .5;
 stim.ledPostVisDurSecs= .0040;
 
+%--------------------------------------------------------------------------
+%% Make struct to display with PTB
+%--------------------------------------------------------------------------
+fprintf('****\n**** Making frame struct for stimuli\n****\n')
 % Instead of adding more variables to the frame_param_struct.m file, make
 % a 'frame' struct here, where each entry is a new displayed stimulus 
 % frame with LED and monitor information. 
@@ -168,8 +177,17 @@ nFramesLedPre   = ceil(stim.ledPreVisDurSecs * monitor.framerate);
 nFramesLedPost  = ceil(stim.ledPostVisDurSecs * monitor.framerate);
 
 % Blank initial duration (maybe for baselining)
-frame.contrast = 0*ones(1,nFramesPad);
-frame.led      = 0*ones(1,nFramesPad);
+frame.contrast      = 0*ones(1,nFramesPad);
+frame.led           = 0*ones(1,nFramesPad);
+frame.stimType      = -1*ones(1,nFramesPad);
+iLocation           = 3; % The third, 'blank' location
+frame.location      = repmat(stim.stimLoc(iLocation,:),nFramesPad,1);
+frame.orientation   = stim.orientation*ones(1,nFramesPad);
+frame.sFreq         = stim.sFreq*ones(1,nFramesPad);
+frame.tFreq         = stim.tFreq*ones(1,nFramesPad);
+frame.phase         = 360*ones(1,nFramesPad);
+frame.fieldOfViewDeg = stim.fieldOfViewDeg*ones(1,nFramesPad);
+frame.fieldOfViewRadiusPx = stim.fieldOfViewRadiusPx*ones(1,nFramesPad);
 
 nStims = length(stim.stimLocOrder)*stim.nRepeats;
 for iStim = 1:nStims
@@ -208,7 +226,7 @@ for iStim = 1:nStims
 
     % LED on and off (make sure it is the same length as visual stimuli fields)
     frame.led(visStart:visEnd) = 0;
-    ledStart = visStart + nFramesLedPre;
+    ledStart = visStart - nFramesLedPre;
     ledEnd = visEnd + nFramesLedPost;
     frame.led(ledStart:ledEnd) = stim.ledOnOffOrder(iCurrStim);
 end
@@ -216,14 +234,25 @@ end
 % Add some blank periods at the end
 visStart  = length(frame.led) + 1;
 visEnd    = visStart+nFramesPad;
-frame.contrast(visStart:visEnd) = 0;
-frame.led(visStart:visEnd) = 0;
+iLocation = 3; % The third, 'blank' location
+frame.contrast(visStart:visEnd)     = 0;
+frame.led(visStart:visEnd)          = 0;
+frame.stimType(visStart:visEnd)     = -1;
+frame.location(visStart:visEnd,:)   = repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
+frame.orientation(visStart:visEnd)  = stim.orientation;
+frame.sFreq(visStart:visEnd)        = stim.sFreq;
+frame.tFreq(visStart:visEnd)        = stim.tFreq;
+frame.phase(visStart:visEnd)        = 360;
+frame.fieldOfViewDeg(visStart:visEnd)= stim.fieldOfViewDeg;
+frame.fieldOfViewRadiusPx(visStart:visEnd) = stim.fieldOfViewRadiusPx;
+
+fprintf('****\n**** Expected Duration %.2f mins\n****\n',numel(frame.led)/monitor.framerate/60)
 
 clear nFrames* nStims iStim nStims visStart visEnd ledStart ledEnd iLocation iCurrStim
 %--------------------------------------------------------------------------
 %% Save metadata before experiment
 %--------------------------------------------------------------------------
-fprintf('>>>>\n>>>> Saving experiment metadata:\n>>>> %s\n',fullfile(metaSaveDir,metaSaveFile))
+fprintf('****\n**** Saving experiment metadata:\n**** %s\n',fullfile(metaSaveDir,metaSaveFile))
 
 % Move experiment info to the exp struct
 exp.animalName = animalName;
@@ -239,7 +268,7 @@ clear expDate fullDateTime expName animalName screenOut
 %--------------------------------------------------------------------------
 %% Final setup + Present stimuli
 %--------------------------------------------------------------------------
-fprintf('>>>>\n>>>> Starting stimulus presentation\n>>>>\n')
+fprintf('****\n**** Starting stimulus presentation\n****\n')
 % Channel 0 is the PTB, Channel 1 is the LED Start with both at zero
 if useDaqDev
     niOut.outputSingleScan([0,0]);
@@ -364,10 +393,8 @@ finalColor = WhiteIndex(winID) * sqrt(stim.endLuminance) * monitor.luminanceCali
 Screen('FillRect', winID, [finalColor finalColor finalColor]);
 Screen('Flip', winID);
 
-% Wait at the end until keyboard press is detected:
-disp('Waiting for Keyboard Press, stimuli complete');
-KbWait
-
 % Close window, release all resources
 Screen('CloseAll');
 ShowCursor;
+
+fprintf('****\n**** Experiment Complete\n**** Saved Metadata To: %s\n****\n',fullfile(metaSaveDir,metaSaveFile))
