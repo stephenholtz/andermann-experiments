@@ -16,11 +16,11 @@
 % From retinotopic mapping scripts by RR/MJLM, esp procedural_gabor_MJLM
 %
 % SLH 2014
-%#ok<*NBRAK,*UNRCH>
+%#ok<*NBRAK,*UNRCH,*NASGU>
 %--------------------------------------------------------------------------
 %% Clean up workspace and daq 
 %--------------------------------------------------------------------------
-forceClear = 1;
+forceClear = 0;
 if forceClear
     close all force; 
     clear all force;
@@ -131,7 +131,7 @@ clear interval res
 %--------------------------------------------------------------------------
 % stim is stimulus information, iterate over stim.stimLoc to make stimuli
 % Padding time before and after the repeated stimuli
-stim.durPad = 10;
+stim.durPad = .10;
 % Stimulus on/off time in seconds converted into a ceil of 60 Hz
 stim.durOff = 3;
 stim.durOn = 1;
@@ -146,17 +146,16 @@ stim.contrast = [-0.8 -0.8 0];  %don't change
 % Luminance to show at end of experiment 
 % 0-(black) to 1-(white):
 stim.endLuminance = 0.5;  % 0 (black) to 1 (white):
-% Field of view, degrees of visual angle (-1==full screen)
+% Field of view, degrees of visual angle (-1 is full screen)
 stim.fieldOfViewDeg = 20;
 stim.fieldOfViewRadiusPx = stim.fieldOfViewDeg * 0.5 * monitor.px_per_deg;
 stim.aspectRatio = 1;
-% Stim Locations, (-,-) = upper left, 11 0 is my "blank" stimulus", just
-% set to 11 for plotting ease
+% Stim Locations, (-,-) = upper left, 11 0 is my "blank" stimulus
 stim.stimLoc = [-11, 0; 0 0; 11 0];
 % Stimulus location order 1,2,3 (3 blank, 1:2 positions)
 stim.stimLocOrder = repmat([1*ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
 % Repeats and randomization
-stim.nRepeats = 2;
+stim.nRepeats = 5;
 % LED on(1) and off(0)
 stim.ledOnOffOrder = [0*ones(1,9), 1*ones(1,9)];
 stim.ledPreVisDurSecs = .5;
@@ -182,7 +181,8 @@ frame.contrast      = 0*ones(1,nFramesPad);
 frame.led           = 0*ones(1,nFramesPad);
 frame.stimType      = 0*ones(1,nFramesPad);
 iLocation           = 3; % The third, 'blank' location
-frame.location      = repmat(stim.stimLoc(iLocation,:),nFramesPad,1);
+frame.locationCm    = repmat(stim.stimLoc(iLocation,:),nFramesPad,1);
+frame.locationPix   = monitor.px_per_cm.*repmat(stim.stimLoc(iLocation,:),nFramesPad,1);
 frame.orientation   = stim.orientation*ones(1,nFramesPad);
 frame.sFreq         = stim.sFreq*ones(1,nFramesPad);
 frame.tFreq         = stim.tFreq*ones(1,nFramesPad);
@@ -211,7 +211,9 @@ for iStim = 1:nStims
     iLocation = stim.stimLocOrder(iCurrStim);
     frame.contrast(visStart:visEnd) = stim.contrast(iLocation);            
     frame.stimType(visStart:visEnd) = iLocation;
-    frame.location(visStart:visEnd,:) = repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
+    % Convert location in cm to location in pixels
+    frame.locationCm(visStart:visEnd,:) = repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
+    frame.locationPix(visStart:visEnd,:) = monitor.px_per_cm.*repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
     frame.orientation(visStart:visEnd) = stim.orientation;
     frame.sFreq(visStart:visEnd) = stim.sFreq;
     frame.tFreq(visStart:visEnd) = stim.tFreq;
@@ -240,7 +242,7 @@ iLocation = 3; % The third, 'blank' location
 frame.contrast(visStart:visEnd)     = 0;
 frame.led(visStart:visEnd)          = 0;
 frame.stimType(visStart:visEnd)     = 0;
-frame.location(visStart:visEnd,:)   = repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
+frame.locationCm(visStart:visEnd,:) = repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
 frame.orientation(visStart:visEnd)  = stim.orientation;
 frame.sFreq(visStart:visEnd)        = stim.sFreq;
 frame.tFreq(visStart:visEnd)        = stim.tFreq;
@@ -263,7 +265,7 @@ meta.fullDateTime = fullDateTime;
 meta.expDate = expDate; 
 meta.metaSaveFile = metaSaveFile;
 % Save an empty variable for the PTB timing / debugging struct
-screenOut = [];
+screenOut = []; 
 save(fullfile(metaSaveDir,metaSaveFile),'meta','monitor','stim','frame','screenOut','-v7.3')
 
 clear expDate fullDateTime expName animalName screenOut
@@ -324,10 +326,10 @@ for iFrame = 1:length(frame.contrast)
     % (Timer will automatically stop at next flip.)
     Screen('GetWindowInfo', winID, 5);
     destinationRect=CenterRect([0 0 monitor.width_px monitor.height_px],...
-                                [0 + frame.location(iFrame,1)...
-                                 0 + frame.location(iFrame,2)...
-                                 monitor.width_px + frame.location(iFrame,1)...
-                                 monitor.height_px + frame.location(iFrame,2)]);
+                                [0 + frame.locationPix(iFrame,1)...
+                                 0 + frame.locationPix(iFrame,2)...
+                                 monitor.width_px + frame.locationPix(iFrame,1)...
+                                 monitor.height_px + frame.locationPix(iFrame,2)]);
     % Draw the Gabor patch using the "procedural texture" syntax:
     % Note: kPsychDontDoRotation = rotation will be performed by the gabor drawing 
     % function rather than by the Screen function
@@ -378,7 +380,7 @@ end
 %% End experiment
 %--------------------------------------------------------------------------
 % Save metadata again (now with screenOut populated)
-save(fullfile(metaSaveDir,metaSaveFile),'exp','monitor','stim','frame','screenOut','-v7.3')
+save(fullfile(metaSaveDir,metaSaveFile),'meta','monitor','stim','frame','screenOut','-v7.3')
 
 % Should already be no signal out, just to be sure:
 if useDaqDev
