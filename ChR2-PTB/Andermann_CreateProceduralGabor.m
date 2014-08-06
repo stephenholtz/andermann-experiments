@@ -1,4 +1,9 @@
-function [gaborid, gaborrect] = CreateProceduralGaborMJLM(windowPtr,width,height,luminanceCalibration)
+function [gaborid, gaborrect] = ...
+	Andermann_CreateProceduralGabor(...
+						windowPtr, ...
+						width, ...
+						height, ...
+						luminanceCalibration)
 % [gaborid, gaborrect] = CreateProceduralGabor(windowPtr, width, height [, nonSymmetric=0][, backgroundColorOffset =(0,0,0,0)][, disableNorm=0][, contrastPreMultiplicator=1])
 %
 % Creates a procedural texture that allows to draw Gabor stimulus patches
@@ -123,7 +128,7 @@ if nargin < 3 || isempty(windowPtr) || isempty(width) || isempty(height)
 end
 
 if nargin < 4
-    luminanceCalibration = 0;
+	luminanceCalibration = 0;
 end
 
 % MJLM: This is an obsolete setting that is not used anymore.
@@ -154,12 +159,17 @@ if nargin < 7 || isempty(contrastPreMultiplicator)
     contrastPreMultiplicator = 1.0;
 end
 
-% Adding support for a computer without this compiled compiled
-if ~nonSymmetric && strcmpi(computer,'WIN64')
-    % Load standard symmetric support shader - Faster!
-    gaborShader = LoadGLSLProgramFromFiles('MJLMGaborAndSquareShader', debuglevel);
-else
-    % Load extended asymmetric support shader - Slower!
+% Added for support away from Anderman Lab PCs
+try
+    if ~nonSymmetric
+        % Load standard symmetric support shader - Faster!
+        gaborShader = LoadGLSLProgramFromFiles('MJLMGaborAndSquareShader', debuglevel);
+    else
+        % Load extended asymmetric support shader - Slower!
+        gaborShader = LoadGLSLProgramFromFiles('NonSymetricGaborShader', debuglevel);
+    end
+catch gaborErr
+    disp(gaborErr.message)
     gaborShader = LoadGLSLProgramFromFiles('NonSymetricGaborShader', debuglevel);
 end
 % Setup shader:
