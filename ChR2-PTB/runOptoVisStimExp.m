@@ -30,8 +30,8 @@ clear forceClear
 %--------------------------------------------------------------------------
 %% Edit for each animal/experiment change
 %--------------------------------------------------------------------------
-animalName      = 'NEWMOUSE01';
-expName         = 'DEBUG01';
+animalName      = 'DEBUG01';
+expName         = 'ChR2-v1';
 fprintf('****\n**** Starting Experiment\n**** animalName: %s\n**** expName: %s\n',animalName,expName)
 
 %--------------------------------------------------------------------------
@@ -131,7 +131,7 @@ clear interval res
 %--------------------------------------------------------------------------
 % stim is stimulus information, iterate over stim.stimLoc to make stimuli
 % Padding time before and after the repeated stimuli
-stim.durPad = .10;
+stim.durPad = 10;
 % Stimulus on/off time in seconds converted into a ceil of 60 Hz
 stim.durOff = 3;
 stim.durOn = 1;
@@ -155,7 +155,7 @@ stim.stimLoc = [-11, 0; 0 0; 11 0];
 % Stimulus location order 1,2,3 (3 blank, 1:2 positions)
 stim.stimLocOrder = repmat([1*ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
 % Repeats and randomization
-stim.nRepeats = 5;
+stim.nRepeats = 40;
 % LED on(1) and off(0)
 stim.ledOnOffOrder = [0*ones(1,9), 1*ones(1,9)];
 stim.ledPreVisDurSecs = .5;
@@ -243,6 +243,7 @@ frame.contrast(visStart:visEnd)     = 0;
 frame.led(visStart:visEnd)          = 0;
 frame.stimType(visStart:visEnd)     = 0;
 frame.locationCm(visStart:visEnd,:) = repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
+frame.locationPix(visStart:visEnd,:)= monitor.px_per_cm.*repmat(stim.stimLoc(iLocation,:),length([visStart:visEnd]),1);
 frame.orientation(visStart:visEnd)  = stim.orientation;
 frame.sFreq(visStart:visEnd)        = stim.sFreq;
 frame.tFreq(visStart:visEnd)        = stim.tFreq;
