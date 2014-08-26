@@ -38,5 +38,5 @@ end
 
 % No reward regardless of lick
 idle(slopTime);
-toggleobject(taskObjBlank,'status','off','Eventmarker',25);
+toggleobject(taskObjBlank,'status','off','Eventmarker',24);
 idle(slopTime);
