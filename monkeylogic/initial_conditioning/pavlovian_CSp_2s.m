@@ -9,11 +9,11 @@ disp('Stimulus: Pavlovian Food Reward (UCR)')
 taskObjMovie = 1; % associated with a movie in the "conditions file"
 
 % Define time intervals (in ms)
-stimulusDuration        = 2000;     % Time the video is playing
-rewardDuration          = 150;      % Open time for solenoid valve, requires calibration
-slopTime                = 40;       % To prevent crashes, inserted gaps between commands...
+stimulusDuration = 2000;     % Time the video is playing
+solenoidDuration = 150;      % Open time for solenoid valve, requires calibration
+slopTime         = 40;       % To prevent crashes, inserted gaps between commands...
 
-totalConditionDuration  = stimulusDuration + rewardDuration + slopTime*2; % Total time for the entire condition
+totalConditionDuration  = stimulusDuration + solenoidDuration + slopTime*2; % Total time for the entire condition
 fprintf('Ideal condition time: %d ms\n',totalConditionDuration);
 
 % Threshold for counting a lick (ON/OFF is 6V/0V)
@@ -40,5 +40,5 @@ end
 % Recieves reward regarless of lick or lick time
 toggleobject(taskObjMovie,'Eventmarker',25);
 idle(slopTime);
-goodmonkey(rewardDuration, 'Numreward',1,'TriggerVal', 5);
+goodmonkey(solenoidDuration, 'Numreward',1,'TriggerVal', 5);
 disp('     Reward delivered')

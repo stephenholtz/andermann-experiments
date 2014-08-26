@@ -1,41 +1,49 @@
-%Pavlovian Conditioning CSp
+% Pavlovian punishment - w/ 4 second duration
+% 2 secons of stimulus, 2 seconds of blank window
+% 
+% Modified from RR and RF scripts
+% SLH
 
-% Task Object
-Target = 1;
-Punish = 2;
+disp('Stimulus: Pavlovian Punishment')
 
+% Task object for timing file
+taskObjBlank = 1;
+taskObjMovie = 2;
+punishmentObj = 3;
 
 % Define Time Intervals (in ms)
-Total_visual_stim_time = 2000;
-% wait_for_pic = 1000;
-sample_time = 1500;
-duration_reward = 300;
-punish_time = 150;
-no_response_idle = duration_reward;
-buffer_time = 100;
-idle_Time = Total_visual_stim_time - sample_time  - buffer_time;
-additional_wait_time = 900;
+stimulusDuration        = 2000;     % Time the video is playing (bars or blank)
+rewardSampleDuration    = 2000;     % Time over which mouse can lick and be rewarded
+solenoidDuration        = 75;      % Open time for solenoid valve, requires calibration
+slopTime                = 40;       % To prevent crashes, inserted gaps between commands...
 
+totalConditionDuration  = stimulusDuration + solenoidDuration + slopTime*3; % Total time for the entire condition
+fprintf('Ideal condition time: %d ms\n',totalConditionDuration);
 
-threshold = 4; % pulses at 6 v 
+% Threshold for counting a lick (ON/OFF is 6V/0V)
+lickThreshold = 4;
 
+% Display video, then turn off 
+toggleobject(taskObjMovie,'Eventmarker',25);
+idle(stimulusDuration);
+toggleobject(taskObjMovie,'status','off','Eventmarker',26);
+idle(slopTime);
 
-toggleobject(Target,'Eventmarker',23);
-idle(idle_Time);
-[ontarget rt] = eyejoytrack('acquiretouch',Target,threshold,sample_time);
-if ~ontarget
-    trialerror(5); % No Response
-    idle(buffer_time)
-    toggleobject(Target,'Eventmarker',24);
-    toggleobject(Punish);
-    idle(punish_time)
-    toggleobject(Punish);
-    return
+% Display blank screen (also = reward period) and wait for licks during
+toggleobject(taskObjBlank);
+idle(slopTime);
+[licked, reactionTime] = eyejoytrack('acquiretouch',taskObjBlank,lickThreshold,rewardSampleDuration);
+if licked
+    % Correct Response
+    trialerror(0);
+    idle(rewardSampleDuration - reactionTime)
+else
+    % No response
+    trialerror(1);
 end
-trialerror(4); % Correct Response
-idle(buffer_time); % stimuli ending too early??
-idle(additional_wait_time);
-toggleobject(Target,'Eventmarker',24);
-toggleobject(Punish);
-idle(punish_time)
-toggleobject(Punish);
+% deliver solenoid regardless of lick
+toggleobject(taskObjBlank);
+toggleobject(punishmentObj, 'status','on');
+idle(solenoidDuration)
+toggleobject(punishmentObj, 'status','off');
+disp('     Punishment delivered')

@@ -1,0 +1,8 @@
+*.asv
+*.m~
+*.mex*
+.DS_Store
+.DS_Store?
+
+*.bhv
+*preprocessed*.mat
