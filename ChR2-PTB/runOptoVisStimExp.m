@@ -30,7 +30,7 @@ clear forceClear
 %--------------------------------------------------------------------------
 %% Edit for each animal/experiment change
 %--------------------------------------------------------------------------
-animalName      = 'DEBUG01';
+animalName      = 'K71';
 expName         = 'ChR2-v1';
 fprintf('****\n**** Starting Experiment\n**** animalName: %s\n**** expName: %s\n',animalName,expName)
 
@@ -138,7 +138,7 @@ stim.durOn = 1;
 % Orientation (0 degrees = 'right' / 90 = 'up') andermann lab conventions
 stim.orientation = 45+360;
 % Spatial frequencies (cpd)
-stim.sFreq = 0.08;
+stim.sFreq = 0.02;
 % Temporal frequencie (Hz)
 stim.tFreq = 2;
 % Contrast, from 0 to 1 (Positive values for sinusoidal, negative for step gratings.)
@@ -155,7 +155,7 @@ stim.stimLoc = [-11, 0; 0 0; 11 0];
 % Stimulus location order 1,2,3 (3 blank, 1:2 positions)
 stim.stimLocOrder = repmat([1*ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
 % Repeats and randomization
-stim.nRepeats = 40;
+stim.nRepeats = 32;
 % LED on(1) and off(0)
 stim.ledOnOffOrder = [0*ones(1,9), 1*ones(1,9)];
 stim.ledPreVisDurSecs = .5;
@@ -273,6 +273,8 @@ clear expDate fullDateTime expName animalName screenOut
 %--------------------------------------------------------------------------
 %% Final setup + Present stimuli
 %--------------------------------------------------------------------------
+fprintf('****\n**** Press any button to start stimulus presentation\n****\n')
+pause()
 fprintf('****\n**** Starting stimulus presentation\n****\n')
 % Channel 0 is the PTB, Channel 1 is the LED Start with both at zero
 if useDaqDev
@@ -285,7 +287,7 @@ winID = Screen('OpenWindow', monitor.id, medGrayColor);
 
 % Move mouse pointer out of the way (also try to fully hide it):
 import java.awt.Robot;
-mouse = Robot;
+mouse = Robot; 
 screenSize = get(0, 'screensize');
 mouse.mouseMove(screenSize(3), screenSize(4));
 HideCursor(monitor.id);
