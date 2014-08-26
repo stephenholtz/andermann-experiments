@@ -36,7 +36,7 @@ else
     trialerror(6);
 end
 
-% No reward regarless of lick
+% No reward regardless of lick
 idle(slopTime);
 toggleobject(taskObjBlank,'status','off','Eventmarker',25);
 idle(slopTime);
