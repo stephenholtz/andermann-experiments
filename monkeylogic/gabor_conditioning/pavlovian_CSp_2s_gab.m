@@ -34,11 +34,11 @@ idle(slopTime);
 [licked, reactionTime] = eyejoytrack('acquiretouch',taskObjBlank,lickThreshold,rewardSampleDuration);
 if licked
     % Correct response
-    trialerror(0);
+    trialerror(8);
     idle(rewardSampleDuration - reactionTime)
 else
     % No response, incorrect
-    trialerror(1);
+    trialerror(9);
 end
 % deliver solenoid regardless of lick
 goodmonkey(solenoidDuration, 'Numreward',1,'TriggerVal', 5);
