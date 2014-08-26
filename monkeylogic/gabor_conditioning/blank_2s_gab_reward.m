@@ -1,9 +1,9 @@
-% Blank screen (unrewarded) with 2 second stimulus duration
+% Blank screen rewarded with 2 second stimulus duration
 %
 % Modified from RR and RF scripts
 % SLH
 
-disp('Stimulus: Blank')
+disp('Stimulus: Blank with reward')
 
 % Task object for timing file
 taskObjBlank = 1;

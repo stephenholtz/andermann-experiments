@@ -10,7 +10,7 @@ taskObjBlank = 1;
 
 % Define time intervals (in ms)
 stimulusDuration        = 2000;     % Time the video is playing
-slopTime                = 50;       % To prevent crashes, inserted gaps between commands...
+slopTime                = 40;       % To prevent crashes, inserted gaps between commands...
 
 totalConditionDuration  = stimulusDuration + slopTime*2; % Total time for the entire condition
 fprintf('Ideal condition time: %d ms\n',totalConditionDuration);
@@ -38,5 +38,5 @@ end
 
 % No reward regarless of lick
 idle(slopTime);
-toggleobject(taskObjBlank,'status','off','Eventmarker',25);
+toggleobject(taskObjBlank,'status','off','Eventmarker',24);
 idle(slopTime);
