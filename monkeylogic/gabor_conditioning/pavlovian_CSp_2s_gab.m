@@ -25,7 +25,7 @@ lickThreshold = 4;
 % Display video, then turn off 
 toggleobject(taskObjMovie,'Eventmarker',25);
 idle(stimulusDuration);
-toggleobject(taskObjMovie,'status','off','Eventmarker',26);
+toggleobject(taskObjMovie,'status','off','Eventmarker',25);
 idle(slopTime);
 
 % Display blank screen (also = reward period) and wait for licks during
@@ -41,8 +41,5 @@ else
     trialerror(1);
 end
 % deliver solenoid regardless of lick
-toggleobject(taskObjBlank);
-toggleobject(punishmentObj, 'status','on');
-idle(solenoidDuration)
-toggleobject(punishmentObj, 'status','off');
-disp('     Punishment delivered')
+goodmonkey(solenoidDuration, 'Numreward',1,'TriggerVal', 5);
+disp('     Reward delivered')
