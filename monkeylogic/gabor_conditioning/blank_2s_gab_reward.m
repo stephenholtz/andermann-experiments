@@ -29,14 +29,12 @@ idle(slopTime);
 [licked, reactionTime] = eyejoytrack('acquiretouch',taskObjBlank,lickThreshold,stimulusDuration);
 if licked
     % Incorrect Response on blank = lick (odd numbers)
-    % Except in this case I am copying rohan's convention
-    % and making the blank lick an even number
-    trialerror(6);
+    trialerror(7);
     % Idle for the remaining stimulus time even if licked
     goodmonkey(solenoidDuration, 'Numreward',1,'TriggerVal', 5);
     idle(stimulusDuration - reactionTime - solenoidDuration);
 else 
-    trialerror(7);
+    trialerror(6);
 end
 idle(slopTime);
 toggleobject(taskObjBlank,'status','off','Eventmarker',25);

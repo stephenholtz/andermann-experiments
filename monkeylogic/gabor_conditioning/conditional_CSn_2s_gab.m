@@ -34,12 +34,12 @@ idle(slopTime);
 [licked, reactionTime] = eyejoytrack('acquiretouch',taskObjBlank,lickThreshold,rewardSampleDuration);
 if licked
     % Lick Response (incorrect)
-    trialerror(7);
+    trialerror(3);
     idle(rewardSampleDuration - reactionTime)
     disp('     Incorrect response (False Alarm)')
 else
     % No response, (correct) 
-    trialerror(8);
+    trialerror(2);
     disp('     Ignored neutral (Correct Reject)')
 end
 

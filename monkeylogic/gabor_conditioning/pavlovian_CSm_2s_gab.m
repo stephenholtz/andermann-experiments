@@ -34,12 +34,12 @@ toggleobject(taskObjBlank);
 idle(slopTime);
 [licked, reactionTime] = eyejoytrack('acquiretouch',taskObjBlank,lickThreshold,rewardSampleDuration);
 if licked
-    % Correct Response
-    trialerror(0);
+    % Incorrect response, shouldn't lick to punished
+    trialerror(9);
     idle(rewardSampleDuration - reactionTime)
 else
-    % No response
-    trialerror(1);
+    % No response, correct
+    trialerror(8);
 end
 % deliver solenoid regardless of lick
 toggleobject(taskObjBlank);
