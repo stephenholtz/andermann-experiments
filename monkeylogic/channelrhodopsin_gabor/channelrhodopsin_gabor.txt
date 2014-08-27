@@ -10,4 +10,4 @@ Condition	Frequency		Block		Timing File				TaskObject#1			TaskObject#2				TaskOb
 9			4				1 2		opto_conditional_CSp_2s_gab		pic(blank,0,0)	Mov(Ori_0,0,0)	 TTL(2)
 10			3				2		opto_conditional_CSm_2s_gab		pic(blank,0,0) 	Mov(Ori_270,0,0)	TTL(1)	 TTL(2)
 11			3				2		opto_conditional_CSn_2s_gab		pic(blank,0,0) 	Mov(Ori_135,0,0)	 TTL(2)
-12			2				1 2		opto_blank_2s_gab			pic(blank,0,0)		 TTL(2)
+12			2				1 2 3		opto_blank_2s_gab			pic(blank,0,0)		 TTL(2)

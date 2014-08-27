@@ -20,7 +20,7 @@ totalConditionDuration  = preStimOptoDuration + postStimOptoDuration + stimulusD
 fprintf('Ideal condition time: %d ms\n',totalConditionDuration);
 
 % Start the opto
-toggleobject(punishmentObj, 'Status','On');
+toggleobject(optoObj, 'Status','On');
 idle(preStimOptoDuration)
 
 % Threshold for counting a lick (ON/OFF is 6V/0V)
