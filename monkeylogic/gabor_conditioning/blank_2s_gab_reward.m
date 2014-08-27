@@ -11,7 +11,7 @@ taskObjBlank = 1;
 % Define time intervals (in ms)
 stimulusDuration = 2000;     % Time the video is playing
 slopTime         = 50;       % To prevent crashes, inserted gaps between commands...
-solenoidDuration = 150;      % Open time for solenoid valve, requires calibration
+solenoidDuration = 225;      % Open time for solenoid valve, requires calibration
 
 totalConditionDuration  = stimulusDuration + slopTime*2; % Total time for the entire condition
 fprintf('Ideal condition time: %d ms\n',totalConditionDuration);
