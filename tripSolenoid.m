@@ -1,4 +1,7 @@
 %% Trip solenoids hooked up to a 5V transistor switch  
+% 
+% Works with legacy and session-based interface
+
 daqreset; clc;
 close all force;
 clear all force;
@@ -18,6 +21,7 @@ switch computer('arch')
         dio = digitalio('nidaq','Dev1');
         addline(dio,0:1,'out');
         start(dio)
+
         while valveFilling
             keyPressed = input('? ','s');
             if keyPressed == '0'
