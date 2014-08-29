@@ -30,20 +30,20 @@ clear forceClear
 %--------------------------------------------------------------------------
 %% Edit for each animal/experiment change
 %--------------------------------------------------------------------------
-animalName      = 'K71';
-expName         = 'ChR2-v1';
+animalName      = 'K51';
+expName         = 'ChR2';
 fprintf('****\n**** Starting Experiment\n**** animalName: %s\n**** expName: %s\n',animalName,expName)
 
 %--------------------------------------------------------------------------
 %% Set filepaths and variables
 %--------------------------------------------------------------------------
-% Add Psychtoolbox 3 to the path (and on my MAC for testing)
+% Add Psychtoolbox 3 to the path (and on my MBP for testing)
 switch computer
     case {'MACI64'}
         addpath(genpath('/Users/stephenholtz/grad-repos/Psychtoolbox-3-master/'));
         tmpMetaFolderName = '/Users/stephenholtz/Zocalo/stim_metadata';
 
-        % Do not use DAQ when on MAC
+        % Do not use DAQ when on MBP
         useDaqDev = 0;
         % Pressing a key during presentation will stop experiment        
         allowKbStop = 1;
@@ -87,7 +87,7 @@ if useDaqDev
     aO(1).Name = 'Psych Toolbox Stimulus Encoding';
     % Add Digital Channels / names for documentation
     % Same as used in monkeylogic
-    dIO = niOut.addDigitalChannel(devID,{'Port0/Line2'},'OutputOnly');
+    dIO = niOut.addDigitalChannel(devID,{'Port2/Line5'},'OutputOnly');
     dIO(1).Name = 'LED MOD'; 
     clear devID
 else
@@ -138,7 +138,7 @@ stim.durOn = 1;
 % Orientation (0 degrees = 'right' / 90 = 'up') andermann lab conventions
 stim.orientation = 45+360;
 % Spatial frequencies (cpd)
-stim.sFreq = 0.02;
+stim.sFreq = 0.04;
 % Temporal frequencie (Hz)
 stim.tFreq = 2;
 % Contrast, from 0 to 1 (Positive values for sinusoidal, negative for step gratings.)
@@ -159,7 +159,8 @@ stim.nRepeats = 32;
 % LED on(1) and off(0)
 stim.ledOnOffOrder = [0*ones(1,9), 1*ones(1,9)];
 stim.ledPreVisDurSecs = .5;
-stim.ledPostVisDurSecs= .0040;
+% LED essentially coterminates, but this allows for refresh problems
+stim.ledPostVisDurSecs= .0050;
 
 %--------------------------------------------------------------------------
 %% Make struct to display with PTB
