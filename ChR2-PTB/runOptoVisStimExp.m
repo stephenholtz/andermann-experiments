@@ -20,10 +20,11 @@
 %--------------------------------------------------------------------------
 %% Clean up workspace and daq 
 %--------------------------------------------------------------------------
-forceClear = 0;
+forceClear = 1;
 if forceClear
     close all force; 
     clear all force;
+    try daqreset; end
 end
 clear forceClear
 
@@ -134,12 +135,12 @@ clear interval res
 stim.durPad = 10;
 % Stimulus on/off time in seconds converted into a ceil of 60 Hz
 stim.durOff = 3;
-stim.durOn = 1;
+stim.durOn = 2;
 % Orientation (0 degrees = 'right' / 90 = 'up') andermann lab conventions
 stim.orientation = 45+360;
 % Spatial frequencies (cpd)
-stim.sFreq = 0.04;
-% Temporal frequencie (Hz)
+stim.sFreq = 0.02;
+% Temporal frequency (Hz)
 stim.tFreq = 2;
 % Contrast, from 0 to 1 (Positive values for sinusoidal, negative for step gratings.)
 stim.contrast = [-0.8 -0.8 0];  %don't change
@@ -147,13 +148,13 @@ stim.contrast = [-0.8 -0.8 0];  %don't change
 % 0-(black) to 1-(white):
 stim.endLuminance = 0.5;  % 0 (black) to 1 (white):
 % Field of view, degrees of visual angle (-1 is full screen)
-stim.fieldOfViewDeg = 20;
+stim.fieldOfViewDeg = 22.5;
 stim.fieldOfViewRadiusPx = stim.fieldOfViewDeg * 0.5 * monitor.px_per_deg;
 stim.aspectRatio = 1;
 % Stim Locations, (-,-) = upper left, 11 0 is my "blank" stimulus
 stim.stimLoc = [-11, 0; 0 0; 11 0];
 % Stimulus location order 1,2,3 (3 blank, 1:2 positions)
-stim.stimLocOrder = repmat([1*ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
+stim.stimLocOrder = repmat([1 *ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
 % Repeats and randomization
 stim.nRepeats = 32;
 % LED on(1) and off(0)
