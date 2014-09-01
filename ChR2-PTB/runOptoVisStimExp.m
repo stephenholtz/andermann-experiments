@@ -20,30 +20,31 @@
 %--------------------------------------------------------------------------
 %% Clean up workspace and daq 
 %--------------------------------------------------------------------------
-forceClear = 0;
+forceClear = 1;
 if forceClear
     close all force; 
     clear all force;
+    try daqreset; end
 end
 clear forceClear
 
 %--------------------------------------------------------------------------
 %% Edit for each animal/experiment change
 %--------------------------------------------------------------------------
-animalName      = 'K71';
-expName         = 'ChR2-v1';
+animalName      = 'K51';
+expName         = 'ChR2';
 fprintf('****\n**** Starting Experiment\n**** animalName: %s\n**** expName: %s\n',animalName,expName)
 
 %--------------------------------------------------------------------------
 %% Set filepaths and variables
 %--------------------------------------------------------------------------
-% Add Psychtoolbox 3 to the path (and on my MAC for testing)
+% Add Psychtoolbox 3 to the path (and on my MBP for testing)
 switch computer
     case {'MACI64'}
         addpath(genpath('/Users/stephenholtz/grad-repos/Psychtoolbox-3-master/'));
         tmpMetaFolderName = '/Users/stephenholtz/Zocalo/stim_metadata';
 
-        % Do not use DAQ when on MAC
+        % Do not use DAQ when on MBP
         useDaqDev = 0;
         % Pressing a key during presentation will stop experiment        
         allowKbStop = 1;
@@ -87,7 +88,7 @@ if useDaqDev
     aO(1).Name = 'Psych Toolbox Stimulus Encoding';
     % Add Digital Channels / names for documentation
     % Same as used in monkeylogic
-    dIO = niOut.addDigitalChannel(devID,{'Port0/Line2'},'OutputOnly');
+    dIO = niOut.addDigitalChannel(devID,{'Port2/Line5'},'OutputOnly');
     dIO(1).Name = 'LED MOD'; 
     clear devID
 else
@@ -134,12 +135,12 @@ clear interval res
 stim.durPad = 10;
 % Stimulus on/off time in seconds converted into a ceil of 60 Hz
 stim.durOff = 3;
-stim.durOn = 1;
+stim.durOn = 2;
 % Orientation (0 degrees = 'right' / 90 = 'up') andermann lab conventions
 stim.orientation = 45+360;
 % Spatial frequencies (cpd)
 stim.sFreq = 0.02;
-% Temporal frequencie (Hz)
+% Temporal frequency (Hz)
 stim.tFreq = 2;
 % Contrast, from 0 to 1 (Positive values for sinusoidal, negative for step gratings.)
 stim.contrast = [-0.8 -0.8 0];  %don't change
@@ -147,19 +148,20 @@ stim.contrast = [-0.8 -0.8 0];  %don't change
 % 0-(black) to 1-(white):
 stim.endLuminance = 0.5;  % 0 (black) to 1 (white):
 % Field of view, degrees of visual angle (-1 is full screen)
-stim.fieldOfViewDeg = 20;
+stim.fieldOfViewDeg = 22.5;
 stim.fieldOfViewRadiusPx = stim.fieldOfViewDeg * 0.5 * monitor.px_per_deg;
 stim.aspectRatio = 1;
 % Stim Locations, (-,-) = upper left, 11 0 is my "blank" stimulus
 stim.stimLoc = [-11, 0; 0 0; 11 0];
 % Stimulus location order 1,2,3 (3 blank, 1:2 positions)
-stim.stimLocOrder = repmat([1*ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
+stim.stimLocOrder = repmat([1 *ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
 % Repeats and randomization
 stim.nRepeats = 32;
 % LED on(1) and off(0)
 stim.ledOnOffOrder = [0*ones(1,9), 1*ones(1,9)];
 stim.ledPreVisDurSecs = .5;
-stim.ledPostVisDurSecs= .0040;
+% LED essentially coterminates, but this allows for refresh problems
+stim.ledPostVisDurSecs= .0050;
 
 %--------------------------------------------------------------------------
 %% Make struct to display with PTB
