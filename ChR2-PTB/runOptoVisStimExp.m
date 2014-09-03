@@ -10,6 +10,8 @@
 % everything -- all andermann lab functions were specialized. Rather than
 % having partial compatability, this starts more or less fresh.
 %
+% Note this was changed slightly at the end to only have two locations
+%
 % Calls:
 %   Andermann_CreateProceduralGabor.m - makes Gabor patches
 %
@@ -24,7 +26,7 @@ forceClear = 1;
 if forceClear
     close all force; 
     clear all force;
-    try daqreset; end
+    try daqreset; catch; end
 end
 clear forceClear
 
@@ -32,7 +34,7 @@ clear forceClear
 %% Edit for each animal/experiment change
 %--------------------------------------------------------------------------
 animalName      = 'K51';
-expName         = 'ChR2';
+expName         = 'ChR2-v3-primetime';
 fprintf('****\n**** Starting Experiment\n**** animalName: %s\n**** expName: %s\n',animalName,expName)
 
 %--------------------------------------------------------------------------
@@ -134,8 +136,8 @@ clear interval res
 % Padding time before and after the repeated stimuli
 stim.durPad = 10;
 % Stimulus on/off time in seconds converted into a ceil of 60 Hz
-stim.durOff = 3;
-stim.durOn = 2;
+stim.durOff = 2.75;
+stim.durOn = 0.5;
 % Orientation (0 degrees = 'right' / 90 = 'up') andermann lab conventions
 stim.orientation = 45+360;
 % Spatial frequencies (cpd)
@@ -143,7 +145,7 @@ stim.sFreq = 0.02;
 % Temporal frequency (Hz)
 stim.tFreq = 2;
 % Contrast, from 0 to 1 (Positive values for sinusoidal, negative for step gratings.)
-stim.contrast = [-0.8 -0.8 0];  %don't change
+stim.contrast = [-0.8 0];  %don't change
 % Luminance to show at end of experiment 
 % 0-(black) to 1-(white):
 stim.endLuminance = 0.5;  % 0 (black) to 1 (white):
@@ -152,19 +154,19 @@ stim.fieldOfViewDeg = 22.5;
 stim.fieldOfViewRadiusPx = stim.fieldOfViewDeg * 0.5 * monitor.px_per_deg;
 stim.aspectRatio = 1;
 % Stim Locations, (-,-) = upper left, 11 0 is my "blank" stimulus
-stim.stimLoc = [-11, 0; 0 0; 11 0];
+stim.stimLoc = [-11, 0; 11 0];
 % Stimulus location order 1,2,3 (3 blank, 1:2 positions)
-stim.stimLocOrder = repmat([1 *ones(1,3) 2*ones(1,3) 3*ones(1,3)],1,2);
+stim.stimLocOrder = repmat([1 *ones(1,4) 2*ones(1,4)],1,2);
 % Repeats and randomization
-stim.nRepeats = 32;
+stim.nRepeats = 48;
 % LED on(1) and off(0)
-stim.ledOnOffOrder = [0*ones(1,9), 1*ones(1,9)];
+stim.ledOnOffOrder = [0*ones(1,8), 1*ones(1,8)];
 stim.ledPreVisDurSecs = .5;
 % LED essentially coterminates, but this allows for refresh problems
 stim.ledPostVisDurSecs= .0050;
 
 %--------------------------------------------------------------------------
-%% Make struct to display with PTB
+%% Make struct to display with kPTB
 %--------------------------------------------------------------------------
 fprintf('****\n**** Making frame struct for stimuli\n****\n')
 % Instead of adding more variables to the frame_param_struct.m file, make
@@ -182,7 +184,7 @@ nFramesLedPost  = ceil(stim.ledPostVisDurSecs * monitor.framerate);
 frame.contrast      = 0*ones(1,nFramesPad);
 frame.led           = 0*ones(1,nFramesPad);
 frame.stimType      = 0*ones(1,nFramesPad);
-iLocation           = 3; % The third, 'blank' location
+iLocation           = numel(stim.contrast); % The third, 'blank' location
 frame.locationCm    = repmat(stim.stimLoc(iLocation,:),nFramesPad,1);
 frame.locationPix   = monitor.px_per_cm.*repmat(stim.stimLoc(iLocation,:),nFramesPad,1);
 frame.orientation   = stim.orientation*ones(1,nFramesPad);
@@ -240,7 +242,7 @@ end
 % Add some blank periods at the end
 visStart  = length(frame.led) + 1;
 visEnd    = visStart+nFramesPad;
-iLocation = 3; % The third, 'blank' location
+iLocation = numel(stim.contrast); % The last, 'blank' location
 frame.contrast(visStart:visEnd)     = 0;
 frame.led(visStart:visEnd)          = 0;
 frame.stimType(visStart:visEnd)     = 0;
