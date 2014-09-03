@@ -14,7 +14,7 @@ punishmentObj = 3;
 % Define Time Intervals (in ms)
 stimulusDuration        = 2000;     % Time the video is playing (bars or blank)
 rewardSampleDuration    = 2000;     % Time over which mouse can lick and be rewarded
-solenoidDuration        = 75;      % Open time for solenoid valve, requires calibration
+solenoidDuration        = 115;      % Open time for solenoid valve, requires calibration
 slopTime                = 40;       % To prevent crashes, inserted gaps between commands...
 
 totalConditionDuration  = stimulusDuration + solenoidDuration + slopTime*3; % Total time for the entire condition
