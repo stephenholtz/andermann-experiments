@@ -1,1 +1,1 @@
-matlab -nodesktop -nosplash -nojvm -r "monkeylogic"
+matlab -nojvm -r "monkeylogic"
